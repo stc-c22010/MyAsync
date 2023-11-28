@@ -10,6 +10,11 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+import android.widget.TextView;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -88,6 +93,37 @@ public class MainActivity extends AppCompatActivity {
         catch(InterruptedException ex){
             Log.w(DEBUG_TAG, "非同期処理結果の取得で例外発生: ", ex);
         }
+        showWeatherInfo(result);
+    }
+
+    @UiThread
+    private void showWeatherInfo(String result){
+        String cityName = "";
+        String weather = "";
+        String latitude = "";
+        String longitude = "";
+        try{
+            JSONObject rootJSON = new JSONObject(result);
+            cityName = rootJSON.getString("name");
+            JSONObject coordJSON = rootJSON.getJSONObject("coord");
+            latitude = coordJSON.getString("lat");
+            longitude = coordJSON.getString("lon");
+            JSONArray weatherJSONArray = rootJSON.getJSONArray("weather");
+            JSONObject weatherJSON = weatherJSONArray.getJSONObject(0);
+            weather = weatherJSON.getString("description");
+        }
+        catch(JSONException ex){
+            Log.e(DEBUG_TAG, "JSON解析失敗", ex);
+        }
+
+        String telop = cityName + "の天気";
+        String desc = "現在は" + weather + "です。\n緯度は" + latitude + "度で経度は" + longitude + "度です。";
+
+        TextView tvWeatherTelop = findViewById(R.id.tvWeatherTelop);
+        TextView tvWeatherDesc = findViewById(R.id.tvWeatherDesc);
+
+        tvWeatherTelop.setText(telop);
+        tvWeatherDesc.setText(desc);
     }
 
     private class WeatherInfoBackgroundReceiver implements Callable<String> {
